@@ -37,7 +37,7 @@
         }
 
         .cell {
-            aspect-ratio: 1/1; /* Ensures square cells */
+            aspect-ratio: 1/1;
             background-color: #333;
             display: flex;
             align-items: center;
@@ -47,7 +47,7 @@
             font-size: 40px;
             font-weight: bold;
             text-align: center;
-            position: relative; /* Ensures content stays within cell */
+            position: relative;
         }
 
         .cell.x {
@@ -95,7 +95,7 @@
             font-size: 20px;
             font-weight: bold;
             background-color: #222;
-            display: none; /* Initially hidden */
+            display: none;
         }
     </style>
 </head>
@@ -105,6 +105,7 @@
 
         <div id="lobby-creation">
             <h2>Создать Лобби</h2>
+            <input type="text" id="custom-lobby-code" placeholder="Введите Код Лобби (5-10 символов)">
             <div id="lobby-code-display">
                 Код Лобби: <span id="lobby-code-value"></span>
             </div>
@@ -159,6 +160,7 @@
         const createLobbyButton = document.getElementById("create-lobby");
         const joinLobbyButton = document.getElementById("join-lobby");
         const lobbyCodeInput = document.getElementById("lobby-code");
+        const customLobbyCodeInput = document.getElementById("custom-lobby-code");
         const gameBoardDiv = document.getElementById("game-board");
         const boardCells = document.querySelectorAll(".cell");
         const messageDiv = document.getElementById("message");
@@ -171,23 +173,40 @@
         let playerSymbol = "";
         let gameActive = false;
 
-        // Generate a unique lobby code
-        function generateLobbyCode() {
-            return Math.random().toString(36).substring(2, 7).toUpperCase();
+        // Validate lobby code
+        function validateLobbyCode(code) {
+            const regex = /^[a-zA-Z0-9]{5,10}$/;
+            return regex.test(code);
         }
 
         // Create a lobby
         createLobbyButton.addEventListener("click", () => {
-            lobbyCode = generateLobbyCode();
+            lobbyCode = customLobbyCodeInput.value.trim().toUpperCase();
+            if (!validateLobbyCode(lobbyCode)) {
+                messageDiv.innerText = "Код лобби должен быть 5-10 символов (буквы и цифры).";
+                return;
+            }
             playerSymbol = "X";
-            createLobbyInFirebase(lobbyCode, playerSymbol);
+
+            // Check if lobby code already exists
+            database.ref("lobbies/" + lobbyCode).once("value")
+                .then(snapshot => {
+                    if (snapshot.exists()) {
+                        messageDiv.innerText = "Этот код лобби уже используется. Выберите другой.";
+                    } else {
+                        createLobbyInFirebase(lobbyCode, playerSymbol);
+                    }
+                })
+                .catch(error => {
+                    messageDiv.innerText = "Ошибка при проверке кода лобби: " + error.message;
+                });
         });
 
         // Join a lobby
         joinLobbyButton.addEventListener("click", () => {
             lobbyCode = lobbyCodeInput.value.trim().toUpperCase();
-            if (!lobbyCode) {
-                messageDiv.innerText = "Введите код лобби.";
+            if (!validateLobbyCode(lobbyCode)) {
+                messageDiv.innerText = "Код лобби должен быть 5-10 символов (буквы и цифры).";
                 return;
             }
             playerSymbol = "O";
@@ -206,7 +225,7 @@
                 turn: symbol,
                 winner: null
             }).then(() => {
-                messageDiv.innerText = `Лобби создано. Ожидание игрока O...`;
+                messageDiv.innerText = `Лобби создано с кодом ${code}. Ожидание игрока O...`;
                 lobbyCodeValueSpan.innerText = code;
                 lobbyCodeDisplayDiv.style.display = "block";
                 lobbyCreationDiv.style.display = "none";
