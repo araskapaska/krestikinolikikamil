@@ -88,9 +88,13 @@
         }
 
         #lobby-code-display {
-            margin-top: 10px;
-            font-size: 18px;
+            margin-bottom: 10px; /* Space above the button */
+            padding: 10px;
+            border: 2px dashed #555;
+            border-radius: 10px;
+            font-size: 20px;
             font-weight: bold;
+            background-color: #222;
         }
     </style>
 </head>
@@ -100,8 +104,10 @@
 
         <div id="lobby-creation">
             <h2>Создать Лобби</h2>
+            <div id="lobby-code-display" style="display: none;">
+                Код Лобби: <span id="lobby-code-value"></span>
+            </div>
             <button id="create-lobby">Создать Лобби</button>
-            <div id="lobby-code-display" style="display: none;">Код Лобби: <span id="lobby-code-value"></span></div>
         </div>
 
         <div id="lobby-joining">
