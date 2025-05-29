@@ -118,25 +118,25 @@
 <body>
     <h1>Крестики-нолики</h1>
     <div id="lobby">
-        <button onclick="createRoom()">Создать комнату</button>
+        <button id="createRoomButton">Создать комнату</button>
         <div>
             <input id="roomCodeInput" type="text" placeholder="Введите код комнаты">
-            <button onclick="joinRoom()">Присоединиться</button>
+            <button id="joinRoomButton">Присоединиться</button>
         </div>
     </div>
     <div id="status">Ожидание выбора комнаты...</div>
     <div id="board">
-        <div class="cell" id="0" onclick="makeMove(0)"></div>
-        <div class="cell" id="1" onclick="makeMove(1)"></div>
-        <div class="cell" id="2" onclick="makeMove(2)"></div>
-        <div class="cell" id="3" onclick="makeMove(3)"></div>
-        <div class="cell" id="4" onclick="makeMove(4)"></div>
-        <div class="cell" id="5" onclick="makeMove(5)"></div>
-        <div class="cell" id="6" onclick="makeMove(6)"></div>
-        <div class="cell" id="7" onclick="makeMove(7)"></div>
-        <div class="cell" id="8" onclick="makeMove(8)"></div>
+        <div class="cell" id="0"></div>
+        <div class="cell" id="1"></div>
+        <div class="cell" id="2"></div>
+        <div class="cell" id="3"></div>
+        <div class="cell" id="4"></div>
+        <div class="cell" id="5"></div>
+        <div class="cell" id="6"></div>
+        <div class="cell" id="7"></div>
+        <div class="cell" id="8"></div>
     </div>
-    <button onclick="resetGame()" style="display: none;" id="resetButton">Новая игра</button>
+    <button id="resetButton" style="display: none;">Новая игра</button>
 
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
@@ -273,6 +273,14 @@
             });
             gameActive = true;
         }
+
+        // Добавление обработчиков событий
+        document.getElementById('createRoomButton').addEventListener('click', createRoom);
+        document.getElementById('joinRoomButton').addEventListener('click', joinRoom);
+        document.getElementById('resetButton').addEventListener('click', resetGame);
+        document.querySelectorAll('.cell').forEach((cell, index) => {
+            cell.addEventListener('click', () => makeMove(index));
+        });
     </script>
 </body>
 </html>
