@@ -37,17 +37,17 @@
         }
 
         .cell {
-            width: 100%;
-            height: 0;
-            padding-bottom: 100%;
+            aspect-ratio: 1/1; /* Ensures square cells */
             background-color: #333;
             display: flex;
-            align-items: center; /* Vertically center */
+            align-items: center;
             justify-content: center;
             border-radius: 10px;
             cursor: pointer;
-            overflow: hidden;
             font-size: 40px;
+            font-weight: bold;
+            text-align: center;
+            position: relative; /* Ensures content stays within cell */
         }
 
         .cell.x {
@@ -88,13 +88,14 @@
         }
 
         #lobby-code-display {
-            margin-bottom: 10px; /* Space above the button */
+            margin-bottom: 10px;
             padding: 10px;
             border: 2px dashed #555;
             border-radius: 10px;
             font-size: 20px;
             font-weight: bold;
             background-color: #222;
+            display: none; /* Initially hidden */
         }
     </style>
 </head>
@@ -104,7 +105,7 @@
 
         <div id="lobby-creation">
             <h2>Создать Лобби</h2>
-            <div id="lobby-code-display" style="display: none;">
+            <div id="lobby-code-display">
                 Код Лобби: <span id="lobby-code-value"></span>
             </div>
             <button id="create-lobby">Создать Лобби</button>
@@ -138,7 +139,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script>
-        // Your Firebase config (replace with your actual config)
+        // Firebase config
         const firebaseConfig = {
             apiKey: "AIzaSyB6cej6YPuHJdI96a8G9mppMQPMftjencA",
             authDomain: "krestiki-noliki-d24c3.firebaseapp.com",
@@ -170,31 +171,35 @@
         let playerSymbol = "";
         let gameActive = false;
 
-        // Function to generate a unique lobby code
+        // Generate a unique lobby code
         function generateLobbyCode() {
             return Math.random().toString(36).substring(2, 7).toUpperCase();
         }
 
-        // Function to create a lobby
+        // Create a lobby
         createLobbyButton.addEventListener("click", () => {
             lobbyCode = generateLobbyCode();
             playerSymbol = "X";
             createLobbyInFirebase(lobbyCode, playerSymbol);
         });
 
-        // Function to join a lobby
+        // Join a lobby
         joinLobbyButton.addEventListener("click", () => {
-            lobbyCode = lobbyCodeInput.value.toUpperCase();
+            lobbyCode = lobbyCodeInput.value.trim().toUpperCase();
+            if (!lobbyCode) {
+                messageDiv.innerText = "Введите код лобби.";
+                return;
+            }
             playerSymbol = "O";
             joinLobbyInFirebase(lobbyCode, playerSymbol);
         });
 
-        // Function to create a lobby in Firebase
+        // Create a lobby in Firebase
         function createLobbyInFirebase(code, symbol) {
             database.ref("lobbies/" + code).set({
                 player1: {
                     symbol: symbol,
-                    uid: firebase.auth().currentUser ? firebase.auth().currentUser.uid : 'guest_' + Date.now() // Use a guest ID if not authenticated
+                    uid: firebase.auth().currentUser ? firebase.auth().currentUser.uid : 'guest_' + Date.now()
                 },
                 player2: null,
                 board: ["", "", "", "", "", "", "", "", ""],
@@ -212,7 +217,7 @@
             });
         }
 
-        // Function to join a lobby in Firebase
+        // Join a lobby in Firebase
         function joinLobbyInFirebase(code, symbol) {
             const lobbyRef = database.ref("lobbies/" + code);
             lobbyRef.once("value")
@@ -222,12 +227,13 @@
                         lobbyRef.update({
                             player2: {
                                 symbol: symbol,
-                                uid: firebase.auth().currentUser ? firebase.auth().currentUser.uid : 'guest_' + Date.now() // Use a guest ID if not authenticated
+                                uid: firebase.auth().currentUser ? firebase.auth().currentUser.uid : 'guest_' + Date.now()
                             }
                         }).then(() => {
                             messageDiv.innerText = `Вы присоединились к лобби ${code} как игрок O. Игра начинается...`;
                             lobbyCreationDiv.style.display = "none";
                             lobbyJoiningDiv.style.display = "none";
+                            lobbyCodeDisplayDiv.style.display = "none";
                             setupGameBoard(code, symbol);
                         }).catch(error => {
                             messageDiv.innerText = "Ошибка при присоединении к лобби: " + error.message;
@@ -235,17 +241,19 @@
                     } else {
                         messageDiv.innerText = "Неверный код лобби или лобби заполнено.";
                     }
+                }).catch(error => {
+                    messageDiv.innerText = "Ошибка при проверке лобби: " + error.message;
                 });
         }
 
-        // Function to set up the game board
+        // Set up the game board
         function setupGameBoard(code, symbol) {
             gameBoardDiv.style.display = "block";
             lobbyCode = code;
             playerSymbol = symbol;
             gameActive = true;
 
-            // Add click listeners to the cells
+            // Add click listeners to cells
             boardCells.forEach(cell => {
                 cell.addEventListener("click", handleCellClick);
             });
@@ -267,7 +275,7 @@
             });
 
             // Listen for winner
-             database.ref("lobbies/" + code + "/winner").on("value", snapshot => {
+            database.ref("lobbies/" + code + "/winner").on("value", snapshot => {
                 const winner = snapshot.val();
                 if (winner) {
                     handleGameOver(winner);
@@ -275,7 +283,7 @@
             });
         }
 
-        // Function to handle cell click
+        // Handle cell click
         function handleCellClick(event) {
             if (!gameActive) return;
 
@@ -286,31 +294,29 @@
                 .then(snapshot => {
                     const lobby = snapshot.val();
                     if (lobby && lobby.turn === playerSymbol && lobby.board[cellIndex] === "") {
-                        // Update the board
                         let newBoard = [...lobby.board];
                         newBoard[cellIndex] = playerSymbol;
-
-                        //Update turn
                         let nextTurn = playerSymbol === "X" ? "O" : "X";
 
                         lobbyRef.update({
                             board: newBoard,
                             turn: nextTurn
                         }).then(() => {
-                            //Check for winner after updating the board
                             checkForWinner(lobbyCode, newBoard);
                         }).catch(error => {
                             messageDiv.innerText = "Ошибка при обновлении доски: " + error.message;
                         });
                     }
+                }).catch(error => {
+                    messageDiv.innerText = "Ошибка при проверке хода: " + error.message;
                 });
         }
 
-        // Function to update the board UI
+        // Update the board UI
         function updateBoardUI(board) {
             boardCells.forEach((cell, index) => {
                 cell.innerText = board[index];
-                cell.classList.remove('x', 'o'); // Remove existing classes
+                cell.classList.remove('x', 'o');
                 if (board[index] === 'X') {
                     cell.classList.add('x');
                 } else if (board[index] === 'O') {
@@ -319,17 +325,16 @@
             });
         }
 
-        // Function to update the turn message
+        // Update turn message
         function updateTurnMessage(turn) {
-            if(turn === playerSymbol){
-                messageDiv.innerText = "Ваш ход (" + playerSymbol + ")";
+            if (turn === playerSymbol) {
+                messageDiv.innerText = `Ваш ход (${playerSymbol})`;
             } else {
-                messageDiv.innerText = "Ход оппонента (" + turn + ")";
+                messageDiv.innerText = `Ход оппонента (${turn})`;
             }
-
         }
 
-        // Function to check for a winner
+        // Check for a winner
         function checkForWinner(lobbyCode, board) {
             const winningCombinations = [
                 [0, 1, 2], [3, 4, 5], [6, 7, 8],
@@ -354,7 +359,7 @@
             }
         }
 
-        // Function to handle game over
+        // Handle game over
         function handleGameOver(winner) {
             gameActive = false;
             if (winner === "draw") {
@@ -365,12 +370,12 @@
                 messageDiv.innerText = "Оппонент победил!";
             }
 
-            //Remove click listeners
+            // Remove click listeners
             boardCells.forEach(cell => {
                 cell.removeEventListener("click", handleCellClick);
             });
 
-            //Remove listeners from firebase
+            // Remove Firebase listeners
             database.ref("lobbies/" + lobbyCode + "/board").off("value");
             database.ref("lobbies/" + lobbyCode + "/turn").off("value");
             database.ref("lobbies/" + lobbyCode + "/winner").off("value");
