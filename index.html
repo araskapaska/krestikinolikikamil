@@ -199,6 +199,7 @@
                 })
                 .catch(error => {
                     messageDiv.innerText = "Ошибка при проверке кода лобби: " + error.message;
+                    console.error("Firebase error:", error);
                 });
         });
 
@@ -233,6 +234,7 @@
                 setupGameBoard(code, symbol);
             }).catch(error => {
                 messageDiv.innerText = "Ошибка при создании лобби: " + error.message;
+                console.error("Firebase error:", error);
             });
         }
 
@@ -241,8 +243,13 @@
             const lobbyRef = database.ref("lobbies/" + code);
             lobbyRef.once("value")
                 .then(snapshot => {
+                    if (!snapshot.exists()) {
+                        messageDiv.innerText = `Лобби с кодом ${code} не существует.`;
+                        return;
+                    }
                     const lobby = snapshot.val();
-                    if (lobby && lobby.player2 === null) {
+                    console.log("Lobby data:", lobby); // Debug: Inspect lobby data
+                    if (lobby.player2 === null) {
                         lobbyRef.update({
                             player2: {
                                 symbol: symbol,
@@ -256,12 +263,14 @@
                             setupGameBoard(code, symbol);
                         }).catch(error => {
                             messageDiv.innerText = "Ошибка при присоединении к лобби: " + error.message;
+                            console.error("Firebase error:", error);
                         });
                     } else {
-                        messageDiv.innerText = "Неверный код лобби или лобби заполнено.";
+                        messageDiv.innerText = `Лобби ${code} уже заполнено.`;
                     }
                 }).catch(error => {
                     messageDiv.innerText = "Ошибка при проверке лобби: " + error.message;
+                    console.error("Firebase error:", error);
                 });
         }
 
@@ -324,10 +333,12 @@
                             checkForWinner(lobbyCode, newBoard);
                         }).catch(error => {
                             messageDiv.innerText = "Ошибка при обновлении доски: " + error.message;
+                            console.error("Firebase error:", error);
                         });
                     }
                 }).catch(error => {
                     messageDiv.innerText = "Ошибка при проверке хода: " + error.message;
+                    console.error("Firebase error:", error);
                 });
         }
 
