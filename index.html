@@ -3,145 +3,121 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Крестики-нолики</title>
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <title>НОЛИК и КРЕСТИК</title>
     <style>
         body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background-color: #1a1a1a;
-            color: #e0e0e0;
-            text-align: center;
-            margin: 0;
-            padding: 20px;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: 20px;
-            color: #ffffff;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-        }
-        #lobby {
-            margin: 20px 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-        }
-        #board {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            width: min(90vw, 360px);
-            margin: 20px auto;
-            display: none;
-        }
-        .cell {
-            aspect-ratio: 1;
-            background: #2c2c2c;
-            border: 2px solid #444;
-            border-radius: 12px;
-            font-size: clamp(2rem, 10vw, 3rem);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: background 0.2s, transform 0.1s;
-        }
-        .cell:hover {
-            background: #3a3a3a;
-            transform: scale(1.05);
-        }
-        .cell:active {
-            transform: scale(0.95);
-        }
-        #status {
-            font-size: clamp(1.2rem, 5vw, 1.5rem);
-            margin: 20px 0;
-            color: #b0b0b0;
-        }
-        #lobby input, #lobby button, #resetButton {
-            padding: 12px 20px;
-            font-size: 1rem;
-            border-radius: 25px;
-            border: none;
-            outline: none;
-            transition: background 0.2s, transform 0.1s;
-            cursor: pointer;
-        }
-        #lobby input {
-            background: #333;
-            color: #e0e0e0;
-            width: min(80vw, 200px);
-            text-align: center;
-        }
-        #lobby input::placeholder {
-            color: #888;
-        }
-        #lobby button, #resetButton {
-            background: #6200ea;
+            font-family: sans-serif;
+            background-color: #121212;
             color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            /* Adapt for phones */
+            padding: 20px;
+            box-sizing: border-box;
         }
-        #lobby button:hover, #resetButton:hover {
-            background: #7f39fb;
-            transform: translateY(-2px);
+
+        .container {
+            background-color: #1e1e1e;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            /* Adapt for phones */
+            width: 100%;
+            max-width: 400px;
         }
-        #lobby button:active, #resetButton:active {
-            transform: translateY(0);
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* Use fr units for responsiveness */
+            grid-gap: 5px;
+            margin-top: 20px;
         }
-        @media (max-width: 600px) {
-            h1 {
-                font-size: 2rem;
-            }
-            #board {
-                width: min(90vw, 300px);
-            }
-            #lobby input, #lobby button, #resetButton {
-                padding: 10px 15px;
-                font-size: 0.9rem;
-            }
+
+        .cell {
+            width: 100%; /* Make cells fill available space */
+            height: 0;
+            padding-bottom: 100%; /* Maintain square aspect ratio */
+            background-color: #333;
+            color: #fff;
+            font-size: 40px; /* Adjusted font size for smaller screens */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            cursor: pointer;
+            overflow: hidden; /* Prevent content overflow */
         }
-        @media (max-width: 400px) {
-            #board {
-                width: min(90vw, 240px);
-            }
-            .cell {
-                font-size: clamp(1.5rem, 8vw, 2rem);
-            }
+
+        .cell:hover {
+            background-color: #444;
+        }
+
+        input[type="text"], button {
+            padding: 10px 15px;
+            margin: 5px;
+            border-radius: 8px;
+            border: none;
+            background-color: #333;
+            color: #fff;
+            width: 100%; /* Full width for inputs and buttons */
+            box-sizing: border-box; /* Include padding and border in element's total width and height */
+        }
+
+        button {
+            cursor: pointer;
+            background-color: #555;
+        }
+
+        button:hover {
+            background-color: #666;
+        }
+
+        #message {
+            margin-top: 20px;
+            font-size: 16px; /* Adjusted font size for smaller screens */
         }
     </style>
 </head>
 <body>
-    <h1>Крестики-нолики</h1>
-    <div id="lobby">
-        <button id="createRoomButton">Создать комнату</button>
-        <div>
-            <input id="roomCodeInput" type="text" placeholder="Введите код комнаты">
-            <button id="joinRoomButton">Присоединиться</button>
+    <div class="container">
+        <h1>НОЛИК и КРЕСТИК</h1>
+
+        <div id="lobby-creation">
+            <h2>Создать Лобби</h2>
+            <button id="create-lobby">Создать Лобби</button>
         </div>
-    </div>
-    <div id="status">Ожидание выбора комнаты...</div>
-    <div id="board">
-        <div class="cell" id="0"></div>
-        <div class="cell" id="1"></div>
-        <div class="cell" id="2"></div>
-        <div class="cell" id="3"></div>
-        <div class="cell" id="4"></div>
-        <div class="cell" id="5"></div>
-        <div class="cell" id="6"></div>
-        <div class="cell" id="7"></div>
-        <div class="cell" id="8"></div>
-    </div>
-    <button id="resetButton" style="display: none;">Новая игра</button>
 
-    <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
-        import { getDatabase, ref, set, push, onValue, update, get } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js';
+        <div id="lobby-joining">
+            <h2>Присоединиться к Лобби</h2>
+            <input type="text" id="lobby-code" placeholder="Введите Код Лобби">
+            <button id="join-lobby">Присоединиться</button>
+        </div>
 
+        <div id="game-board" style="display: none;">
+            <h2>Игровое Поле</h2>
+            <div class="board">
+                <div class="cell" data-index="0"></div>
+                <div class="cell" data-index="1"></div>
+                <div class="cell" data-index="2"></div>
+                <div class="cell" data-index="3"></div>
+                <div class="cell" data-index="4"></div>
+                <div class="cell" data-index="5"></div>
+                <div class="cell" data-index="6"></div>
+                <div class="cell" data-index="7"></div>
+                <div class="cell" data-index="8"></div>
+            </div>
+        </div>
+
+        <div id="message"></div>
+    </div>
+
+    <script>
+        // Your Firebase config (replace with your actual config)
         const firebaseConfig = {
             apiKey: "AIzaSyB6cej6YPuHJdI96a8G9mppMQPMftjencA",
             authDomain: "krestiki-noliki-d24c3.firebaseapp.com",
@@ -153,151 +129,224 @@
             measurementId: "G-D6XZDRM477"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
 
-        let mySymbol = null;
-        let currentPlayer = 'X';
-        let board = ['', '', '', '', '', '', '', '', ''];
+        // UI elements
+        const createLobbyButton = document.getElementById("create-lobby");
+        const joinLobbyButton = document.getElementById("join-lobby");
+        const lobbyCodeInput = document.getElementById("lobby-code");
+        const gameBoardDiv = document.getElementById("game-board");
+        const boardCells = document.querySelectorAll(".cell");
+        const messageDiv = document.getElementById("message");
+        const lobbyCreationDiv = document.getElementById("lobby-creation");
+        const lobbyJoiningDiv = document.getElementById("lobby-joining");
+
+        let lobbyCode = "";
+        let playerSymbol = "";
         let gameActive = false;
-        let roomCode = null;
 
-        function generateRoomCode() {
-            return Math.random().toString(36).substring(2, 8).toUpperCase();
+        // Function to generate a unique lobby code
+        function generateLobbyCode() {
+            return Math.random().toString(36).substring(2, 7).toUpperCase();
         }
 
-        async function createRoom() {
-            try {
-                const newRoomCode = generateRoomCode();
-                const roomData = {
-                    players: ['X'],
-                    board: '         ',
-                    currentPlayer: 'X'
-                };
-                await set(ref(db, `rooms/${newRoomCode}`), roomData);
-                roomCode = newRoomCode;
-                document.getElementById('status').textContent = `Код комнаты: ${roomCode}. Ожидание второго игрока...`;
-                console.log(`Комната создана: ${newRoomCode}, данные:`, roomData);
-                joinRoomAsPlayer(newRoomCode, 'X');
-            } catch (error) {
-                console.error('Ошибка при создании комнаты:', error);
-                document.getElementById('status').textContent = `Ошибка при создании комнаты: ${error.message}`;
-            }
+        // Function to create a lobby
+        createLobbyButton.addEventListener("click", () => {
+            lobbyCode = generateLobbyCode();
+            playerSymbol = "X";
+            createLobbyInFirebase(lobbyCode, playerSymbol);
+        });
+
+        // Function to join a lobby
+        joinLobbyButton.addEventListener("click", () => {
+            lobbyCode = lobbyCodeInput.value.toUpperCase();
+            playerSymbol = "O";
+            joinLobbyInFirebase(lobbyCode, playerSymbol);
+        });
+
+        // Function to create a lobby in Firebase
+        function createLobbyInFirebase(code, symbol) {
+            database.ref("lobbies/" + code).set({
+                player1: {
+                    symbol: symbol,
+                    uid: firebase.auth().currentUser ? firebase.auth().currentUser.uid : 'guest_' + Date.now() // Use a guest ID if not authenticated
+                },
+                player2: null,
+                board: ["", "", "", "", "", "", "", "", ""],
+                turn: symbol,
+                winner: null
+            }).then(() => {
+                messageDiv.innerText = `Лобби создано с кодом: ${code}. Ожидание игрока O...`;
+                lobbyCreationDiv.style.display = "none";
+                lobbyJoiningDiv.style.display = "none";
+                setupGameBoard(code, symbol);
+            }).catch(error => {
+                messageDiv.innerText = "Ошибка при создании лобби: " + error.message;
+            });
         }
 
-        async function joinRoom() {
-            const inputRoomCode = document.getElementById('roomCodeInput').value.toUpperCase();
-            if (!inputRoomCode) {
-                document.getElementById('status').textContent = 'Введите код комнаты';
-                return;
-            }
-            try {
-                const snapshot = await get(ref(db, `rooms/${inputRoomCode}`));
-                if (snapshot.exists()) {
-                    const room = snapshot.val();
-                    if (room.players.length < 2) {
-                        await push(ref(db, `rooms/${inputRoomCode}/players`), 'O');
-                        roomCode = inputRoomCode;
-                        console.log(`Присоединился к комнате: ${inputRoomCode} как O`);
-                        joinRoomAsPlayer(inputRoomCode, 'O');
+        // Function to join a lobby in Firebase
+        function joinLobbyInFirebase(code, symbol) {
+            const lobbyRef = database.ref("lobbies/" + code);
+            lobbyRef.once("value")
+                .then(snapshot => {
+                    const lobby = snapshot.val();
+                    if (lobby && lobby.player2 === null) {
+                        lobbyRef.update({
+                            player2: {
+                                symbol: symbol,
+                                uid: firebase.auth().currentUser ? firebase.auth().currentUser.uid : 'guest_' + Date.now() // Use a guest ID if not authenticated
+                            }
+                        }).then(() => {
+                            messageDiv.innerText = `Вы присоединились к лобби ${code} как игрок O. Игра начинается...`;
+                            lobbyCreationDiv.style.display = "none";
+                            lobbyJoiningDiv.style.display = "none";
+                            setupGameBoard(code, symbol);
+                        }).catch(error => {
+                            messageDiv.innerText = "Ошибка при присоединении к лобби: " + error.message;
+                        });
                     } else {
-                        document.getElementById('status').textContent = 'Комната заполнена';
-                        console.warn(`Комната ${inputRoomCode} заполнена`);
+                        messageDiv.innerText = "Неверный код лобби или лобби заполнено.";
                     }
-                } else {
-                    document.getElementById('status').textContent = 'Комната не найдена';
-                    console.warn(`Комната ${inputRoomCode} не найдена`);
-                }
-            } catch (error) {
-                console.error('Ошибка при присоединении к комнате:', error);
-                document.getElementById('status').textContent = `Ошибка: ${error.message}`;
-            }
+                });
         }
 
-        function joinRoomAsPlayer(code, symbol) {
-            mySymbol = symbol;
-            roomCode = code;
-            document.getElementById('lobby').style.display = 'none';
-            document.getElementById('board').style.display = 'grid';
-            document.getElementById('resetButton').style.display = 'block';
+        // Function to set up the game board
+        function setupGameBoard(code, symbol) {
+            gameBoardDiv.style.display = "block";
+            lobbyCode = code;
+            playerSymbol = symbol;
             gameActive = true;
 
-            onValue(ref(db, `rooms/${roomCode}`), snapshot => {
-                if (!snapshot.exists()) {
-                    document.getElementById('status').textContent = 'Комната закрыта';
-                    gameActive = false;
-                    console.warn(`Комната ${roomCode} закрыта`);
-                    return;
+            // Add click listeners to the cells
+            boardCells.forEach(cell => {
+                cell.addEventListener("click", handleCellClick);
+            });
+
+            // Listen for board changes
+            database.ref("lobbies/" + code + "/board").on("value", snapshot => {
+                const board = snapshot.val();
+                if (board) {
+                    updateBoardUI(board);
                 }
-                const room = snapshot.val();
-                board = room.board.split('');
-                currentPlayer = room.currentPlayer;
-                updateBoard();
-                checkGameStatus();
-                document.getElementById('status').textContent = `Вы играете за ${mySymbol}. Ходит: ${currentPlayer}`;
-            }, error => {
-                console.error('Ошибка при подписке на комнату:', error);
-                document.getElementById('status').textContent = `Ошибка подписки: ${error.message}`;
+            });
+
+            // Listen for turn changes
+            database.ref("lobbies/" + code + "/turn").on("value", snapshot => {
+                const turn = snapshot.val();
+                if (turn) {
+                    updateTurnMessage(turn);
+                }
+            });
+
+            // Listen for winner
+             database.ref("lobbies/" + code + "/winner").on("value", snapshot => {
+                const winner = snapshot.val();
+                if (winner) {
+                    handleGameOver(winner);
+                }
             });
         }
 
-        function makeMove(cellIndex) {
-            if (!gameActive || board[cellIndex] !== '' || currentPlayer !== mySymbol) return;
-            board[cellIndex] = mySymbol;
-            const newBoard = board.join('');
-            update(ref(db, `rooms/${roomCode}`), {
-                board: newBoard,
-                currentPlayer: currentPlayer === 'X' ? 'O' : 'X'
-            }).catch(error => {
-                console.error('Ошибка при обновлении хода:', error);
-                document.getElementById('status').textContent = `Ошибка хода: ${error.message}`;
+        // Function to handle cell click
+        function handleCellClick(event) {
+            if (!gameActive) return;
+
+            const cellIndex = event.target.dataset.index;
+            const lobbyRef = database.ref("lobbies/" + lobbyCode);
+
+            lobbyRef.once("value")
+                .then(snapshot => {
+                    const lobby = snapshot.val();
+                    if (lobby && lobby.turn === playerSymbol && lobby.board[cellIndex] === "") {
+                        // Update the board
+                        let newBoard = [...lobby.board];
+                        newBoard[cellIndex] = playerSymbol;
+
+                        //Update turn
+                        let nextTurn = playerSymbol === "X" ? "O" : "X";
+
+                        lobbyRef.update({
+                            board: newBoard,
+                            turn: nextTurn
+                        }).then(() => {
+                            //Check for winner after updating the board
+                            checkForWinner(lobbyCode, newBoard);
+                        }).catch(error => {
+                            messageDiv.innerText = "Ошибка при обновлении доски: " + error.message;
+                        });
+                    }
+                });
+        }
+
+        // Function to update the board UI
+        function updateBoardUI(board) {
+            boardCells.forEach((cell, index) => {
+                cell.innerText = board[index];
             });
         }
 
-        function updateBoard() {
-            for (let i = 0; i < 9; i++) {
-                document.getElementById(i).textContent = board[i];
+        // Function to update the turn message
+        function updateTurnMessage(turn) {
+            if(turn === playerSymbol){
+                messageDiv.innerText = "Ваш ход (" + playerSymbol + ")";
+            } else {
+                messageDiv.innerText = "Ход оппонента (" + turn + ")";
             }
+
         }
 
-        function checkGameStatus() {
-            const winPatterns = [
+        // Function to check for a winner
+        function checkForWinner(lobbyCode, board) {
+            const winningCombinations = [
                 [0, 1, 2], [3, 4, 5], [6, 7, 8],
                 [0, 3, 6], [1, 4, 7], [2, 5, 8],
                 [0, 4, 8], [2, 4, 6]
             ];
-            for (const pattern of winPatterns) {
-                const [a, b, c] = pattern;
+
+            for (const combination of winningCombinations) {
+                const [a, b, c] = combination;
                 if (board[a] && board[a] === board[b] && board[a] === board[c]) {
-                    gameActive = false;
-                    document.getElementById('status').textContent = `${board[a]} победил!`;
+                    database.ref("lobbies/" + lobbyCode).update({
+                        winner: board[a]
+                    });
                     return;
                 }
             }
-            if (!board.includes('')) {
-                gameActive = false;
-                document.getElementById('status').textContent = 'Ничья!';
+
+            if (!board.includes("")) {
+                database.ref("lobbies/" + lobbyCode).update({
+                    winner: "draw"
+                });
             }
         }
 
-        function resetGame() {
-            update(ref(db, `rooms/${roomCode}`), {
-                board: '         ',
-                currentPlayer: 'X'
-            }).catch(error => {
-                console.error('Ошибка при сбросе игры:', error);
-                document.getElementById('status').textContent = `Ошибка сброса: ${error.message}`;
-            });
-            gameActive = true;
-        }
+        // Function to handle game over
+        function handleGameOver(winner) {
+            gameActive = false;
+            if (winner === "draw") {
+                messageDiv.innerText = "Ничья!";
+            } else if (winner === playerSymbol) {
+                messageDiv.innerText = "Вы победили!";
+            } else {
+                messageDiv.innerText = "Оппонент победил!";
+            }
 
-        // Добавление обработчиков событий
-        document.getElementById('createRoomButton').addEventListener('click', createRoom);
-        document.getElementById('joinRoomButton').addEventListener('click', joinRoom);
-        document.getElementById('resetButton').addEventListener('click', resetGame);
-        document.querySelectorAll('.cell').forEach((cell, index) => {
-            cell.addEventListener('click', () => makeMove(index));
-        });
+            //Remove click listeners
+            boardCells.forEach(cell => {
+                cell.removeEventListener("click", handleCellClick);
+            });
+
+            //Remove listeners from firebase
+            database.ref("lobbies/" + lobbyCode + "/board").off("value");
+            database.ref("lobbies/" + lobbyCode + "/turn").off("value");
+            database.ref("lobbies/" + lobbyCode + "/winner").off("value");
+        }
     </script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 </body>
 </html>
