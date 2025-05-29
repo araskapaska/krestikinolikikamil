@@ -169,16 +169,19 @@
         async function createRoom() {
             try {
                 const newRoomCode = generateRoomCode();
-                await set(ref(db, `rooms/${newRoomCode}`), {
+                const roomData = {
                     players: ['X'],
                     board: '         ',
                     currentPlayer: 'X'
-                });
+                };
+                await set(ref(db, `rooms/${newRoomCode}`), roomData);
                 roomCode = newRoomCode;
                 document.getElementById('status').textContent = `Код комнаты: ${roomCode}. Ожидание второго игрока...`;
+                console.log(`Комната создана: ${newRoomCode}, данные:`, roomData);
                 joinRoomAsPlayer(newRoomCode, 'X');
             } catch (error) {
-                document.getElementById('status').textContent = 'Ошибка при создании комнаты: ' + error.message;
+                console.error('Ошибка при создании комнаты:', error);
+                document.getElementById('status').textContent = `Ошибка при создании комнаты: ${error.message}`;
             }
         }
 
@@ -195,15 +198,19 @@
                     if (room.players.length < 2) {
                         await push(ref(db, `rooms/${inputRoomCode}/players`), 'O');
                         roomCode = inputRoomCode;
+                        console.log(`Присоединился к комнате: ${inputRoomCode} как O`);
                         joinRoomAsPlayer(inputRoomCode, 'O');
                     } else {
                         document.getElementById('status').textContent = 'Комната заполнена';
+                        console.warn(`Комната ${inputRoomCode} заполнена`);
                     }
                 } else {
                     document.getElementById('status').textContent = 'Комната не найдена';
+                    console.warn(`Комната ${inputRoomCode} не найдена`);
                 }
             } catch (error) {
-                document.getElementById('status').textContent = 'Ошибка: ' + error.message;
+                console.error('Ошибка при присоединении к комнате:', error);
+                document.getElementById('status').textContent = `Ошибка: ${error.message}`;
             }
         }
 
@@ -219,6 +226,7 @@
                 if (!snapshot.exists()) {
                     document.getElementById('status').textContent = 'Комната закрыта';
                     gameActive = false;
+                    console.warn(`Комната ${roomCode} закрыта`);
                     return;
                 }
                 const room = snapshot.val();
@@ -227,6 +235,9 @@
                 updateBoard();
                 checkGameStatus();
                 document.getElementById('status').textContent = `Вы играете за ${mySymbol}. Ходит: ${currentPlayer}`;
+            }, error => {
+                console.error('Ошибка при подписке на комнату:', error);
+                document.getElementById('status').textContent = `Ошибка подписки: ${error.message}`;
             });
         }
 
@@ -237,6 +248,9 @@
             update(ref(db, `rooms/${roomCode}`), {
                 board: newBoard,
                 currentPlayer: currentPlayer === 'X' ? 'O' : 'X'
+            }).catch(error => {
+                console.error('Ошибка при обновлении хода:', error);
+                document.getElementById('status').textContent = `Ошибка хода: ${error.message}`;
             });
         }
 
@@ -270,6 +284,9 @@
             update(ref(db, `rooms/${roomCode}`), {
                 board: '         ',
                 currentPlayer: 'X'
+            }).catch(error => {
+                console.error('Ошибка при сбросе игры:', error);
+                document.getElementById('status').textContent = `Ошибка сброса: ${error.message}`;
             });
             gameActive = true;
         }
