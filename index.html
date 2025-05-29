@@ -15,7 +15,6 @@
             justify-content: center;
             height: 100vh;
             margin: 0;
-            /* Adapt for phones */
             padding: 20px;
             box-sizing: border-box;
         }
@@ -26,31 +25,37 @@
             padding: 20px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
             text-align: center;
-            /* Adapt for phones */
             width: 100%;
             max-width: 400px;
         }
 
         .board {
             display: grid;
-            grid-template-columns: repeat(3, 1fr); /* Use fr units for responsiveness */
+            grid-template-columns: repeat(3, 1fr);
             grid-gap: 5px;
             margin-top: 20px;
         }
 
         .cell {
-            width: 100%; /* Make cells fill available space */
+            width: 100%;
             height: 0;
-            padding-bottom: 100%; /* Maintain square aspect ratio */
+            padding-bottom: 100%;
             background-color: #333;
-            color: #fff;
-            font-size: 40px; /* Adjusted font size for smaller screens */
             display: flex;
-            align-items: center;
+            align-items: center; /* Vertically center */
             justify-content: center;
             border-radius: 10px;
             cursor: pointer;
-            overflow: hidden; /* Prevent content overflow */
+            overflow: hidden;
+            font-size: 40px;
+        }
+
+        .cell.x {
+            color: red;
+        }
+
+        .cell.o {
+            color: blue;
         }
 
         .cell:hover {
@@ -64,8 +69,8 @@
             border: none;
             background-color: #333;
             color: #fff;
-            width: 100%; /* Full width for inputs and buttons */
-            box-sizing: border-box; /* Include padding and border in element's total width and height */
+            width: 100%;
+            box-sizing: border-box;
         }
 
         button {
@@ -79,7 +84,13 @@
 
         #message {
             margin-top: 20px;
-            font-size: 16px; /* Adjusted font size for smaller screens */
+            font-size: 16px;
+        }
+
+        #lobby-code-display {
+            margin-top: 10px;
+            font-size: 18px;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -90,6 +101,7 @@
         <div id="lobby-creation">
             <h2>Создать Лобби</h2>
             <button id="create-lobby">Создать Лобби</button>
+            <div id="lobby-code-display" style="display: none;">Код Лобби: <span id="lobby-code-value"></span></div>
         </div>
 
         <div id="lobby-joining">
@@ -145,6 +157,8 @@
         const messageDiv = document.getElementById("message");
         const lobbyCreationDiv = document.getElementById("lobby-creation");
         const lobbyJoiningDiv = document.getElementById("lobby-joining");
+        const lobbyCodeDisplayDiv = document.getElementById("lobby-code-display");
+        const lobbyCodeValueSpan = document.getElementById("lobby-code-value");
 
         let lobbyCode = "";
         let playerSymbol = "";
@@ -181,7 +195,9 @@
                 turn: symbol,
                 winner: null
             }).then(() => {
-                messageDiv.innerText = `Лобби создано с кодом: ${code}. Ожидание игрока O...`;
+                messageDiv.innerText = `Лобби создано. Ожидание игрока O...`;
+                lobbyCodeValueSpan.innerText = code;
+                lobbyCodeDisplayDiv.style.display = "block";
                 lobbyCreationDiv.style.display = "none";
                 lobbyJoiningDiv.style.display = "none";
                 setupGameBoard(code, symbol);
@@ -288,6 +304,12 @@
         function updateBoardUI(board) {
             boardCells.forEach((cell, index) => {
                 cell.innerText = board[index];
+                cell.classList.remove('x', 'o'); // Remove existing classes
+                if (board[index] === 'X') {
+                    cell.classList.add('x');
+                } else if (board[index] === 'O') {
+                    cell.classList.add('o');
+                }
             });
         }
 
