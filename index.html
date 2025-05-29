@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Крестики-нолики</title>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js"></script>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <style>
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
@@ -139,8 +138,10 @@
     </div>
     <button onclick="resetGame()" style="display: none;" id="resetButton">Новая игра</button>
 
-    <script>
-        // Инициализация Firebase
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
+        import { getDatabase, ref, set, push, onValue, update, get } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js';
+
         const firebaseConfig = {
             apiKey: "AIzaSyB6cej6YPuHJdI96a8G9mppMQPMftjencA",
             authDomain: "krestiki-noliki-d24c3.firebaseapp.com",
@@ -148,11 +149,12 @@
             projectId: "krestiki-noliki-d24c3",
             storageBucket: "krestiki-noliki-d24c3.firebasestorage.app",
             messagingSenderId: "163098662385",
-            appId: "1:163098662385:web:2c456f64256cc3ff61e050",
-            measurementId: "G-DWC8009CQE"
+            appId: "1:163098662385:web:328361f5e1239abc61e050",
+            measurementId: "G-D6XZDRM477"
         };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
 
         let mySymbol = null;
         let currentPlayer = 'X';
@@ -164,39 +166,45 @@
             return Math.random().toString(36).substring(2, 8).toUpperCase();
         }
 
-        function createRoom() {
-            roomCode = generateRoomCode();
-            db.ref(`rooms/${roomCode}`).set({
-                players: ['X'],
-                board: '         ',
-                currentPlayer: 'X'
-            }).then(() => {
+        async function createRoom() {
+            try {
+                const newRoomCode = generateRoomCode();
+                await set(ref(db, `rooms/${newRoomCode}`), {
+                    players: ['X'],
+                    board: '         ',
+                    currentPlayer: 'X'
+                });
+                roomCode = newRoomCode;
                 document.getElementById('status').textContent = `Код комнаты: ${roomCode}. Ожидание второго игрока...`;
-                joinRoomAsPlayer(roomCode, 'X');
-            }).catch(error => {
+                joinRoomAsPlayer(newRoomCode, 'X');
+            } catch (error) {
                 document.getElementById('status').textContent = 'Ошибка при создании комнаты: ' + error.message;
-            });
+            }
         }
 
-        function joinRoom() {
-            roomCode = document.getElementById('roomCodeInput').value.toUpperCase();
-            if (!roomCode) {
+        async function joinRoom() {
+            const inputRoomCode = document.getElementById('roomCodeInput').value.toUpperCase();
+            if (!inputRoomCode) {
                 document.getElementById('status').textContent = 'Введите код комнаты';
                 return;
             }
-            db.ref(`rooms/${roomCode}`).once('value').then(snapshot => {
+            try {
+                const snapshot = await get(ref(db, `rooms/${inputRoomCode}`));
                 if (snapshot.exists()) {
                     const room = snapshot.val();
                     if (room.players.length < 2) {
-                        db.ref(`rooms/${roomCode}/players`).push('O');
-                        joinRoomAsPlayer(roomCode, 'O');
+                        await push(ref(db, `rooms/${inputRoomCode}/players`), 'O');
+                        roomCode = inputRoomCode;
+                        joinRoomAsPlayer(inputRoomCode, 'O');
                     } else {
                         document.getElementById('status').textContent = 'Комната заполнена';
                     }
                 } else {
                     document.getElementById('status').textContent = 'Комната не найдена';
                 }
-            });
+            } catch (error) {
+                document.getElementById('status').textContent = 'Ошибка: ' + error.message;
+            }
         }
 
         function joinRoomAsPlayer(code, symbol) {
@@ -207,7 +215,7 @@
             document.getElementById('resetButton').style.display = 'block';
             gameActive = true;
 
-            db.ref(`rooms/${roomCode}`).on('value', snapshot => {
+            onValue(ref(db, `rooms/${roomCode}`), snapshot => {
                 if (!snapshot.exists()) {
                     document.getElementById('status').textContent = 'Комната закрыта';
                     gameActive = false;
@@ -226,7 +234,7 @@
             if (!gameActive || board[cellIndex] !== '' || currentPlayer !== mySymbol) return;
             board[cellIndex] = mySymbol;
             const newBoard = board.join('');
-            db.ref(`rooms/${roomCode}`).update({
+            update(ref(db, `rooms/${roomCode}`), {
                 board: newBoard,
                 currentPlayer: currentPlayer === 'X' ? 'O' : 'X'
             });
@@ -259,7 +267,7 @@
         }
 
         function resetGame() {
-            db.ref(`rooms/${roomCode}`).update({
+            update(ref(db, `rooms/${roomCode}`), {
                 board: '         ',
                 currentPlayer: 'X'
             });
